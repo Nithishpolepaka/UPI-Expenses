@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UPI Pulse — Personal Expense & SMS Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-down {
+      animation: slideDown 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Toast / Simulated SMS Notification Container -->
+  <div id="toastContainer" class="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 font-bold text-lg shadow-inner">
+          ₹
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">UPI Pulse</h1>
+            <span id="nativeBridgeStatusBadge" class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Step 2 • Android 14–16 Ready</span>
+          </div>
+          <p class="text-xs text-slate-400">Auto-SMS UPI Parser • Manual Ledger • Day / Month / Year & Backup</p>
+        </div>
+      </div>
+
+      <div class="flex items-center flex-wrap gap-2">
+        <button id="btnSimulateSms" type="button" class="inline-flex items-center gap-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-lg transition shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span>Simulate Incoming UPI SMS</span>
+        </button>
+
+        <button id="btnOpenBackup" type="button" class="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg transition">
+          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <span>Backup & Restore</span>
+        </button>
+
+        <button id="btnOpenCodeGuide" type="button" class="inline-flex items-center gap-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-2 rounded-lg transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <span>How It Works</span>
+        </button>
+
+        <button id="btnOpenApkModal" type="button" class="inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg transition shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          <span>Android 14–16 APK Setup</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Period Summary KPI Cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Credited (<span id="kpiPeriodLabelCredit">This Month</span>)</p>
+          </div>
+          <p id="kpiTotalCredit" class="text-2xl font-bold text-emerald-600 mt-1">+₹0.00</p>
+          <p id="kpiCountCredit" class="text-xs text-slate-400 mt-0.5">0 credit transactions</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Debited (<span id="kpiPeriodLabelDebit">This Month</span>)</p>
+          </div>
+          <p id="kpiTotalDebit" class="text-2xl font-bold text-rose-600 mt-1">-₹0.00</p>
+          <p id="kpiCountDebit" class="text-xs text-slate-400 mt-0.5">0 debit transactions</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Net Balance (<span id="kpiPeriodLabelNet">This Month</span>)</p>
+          </div>
+          <p id="kpiNetBalance" class="text-2xl font-bold text-slate-900 mt-1">₹0.00</p>
+          <p id="kpiTotalCount" class="text-xs text-slate-400 mt-0.5">0 total records in view</p>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Two-Column Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Column: Input Panel (SMS Auto-Parser + Manual Form) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <!-- Input Mode Switcher -->
+        <div class="grid grid-cols-2 border-b border-slate-200 bg-slate-50/70 p-1.5 gap-1.5">
+          <button id="tabBtnSmsMode" type="button" class="py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-sm border border-slate-200/80">
+            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>UPI SMS Auto-Reader</span>
+          </button>
+          <button id="tabBtnManualMode" type="button" class="py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Manual Entry</span>
+          </button>
+        </div>
+
+        <!-- Panel 1: UPI SMS Auto-Reader -->
+        <div id="panelSmsMode" class="p-5 space-y-4">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Instant Bank / UPI SMS Parser</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Paste any bank SMS or click a sample below to extract amount, credit/debit & merchant.</p>
+            </div>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer select-none bg-indigo-50 border border-indigo-200/70 px-2.5 py-1 rounded-lg">
+              <input id="chkAutoSaveOnPaste" type="checkbox" checked class="rounded text-indigo-600 focus:ring-indigo-500 w-3.5 h-3.5" />
+              <span class="text-[11px] font-semibold text-indigo-800">Auto-Log on Paste</span>
+            </label>
+          </div>
+
+          <!-- Sample SMS Chips -->
+          <div>
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Try a Sample Bank UPI Message:</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" data-sample="swiggy" class="sample-sms-btn text-xs bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg transition">
+                Swiggy Debit (₹450)
+              </button>
+              <button type="button" data-sample="credit_friend" class="sample-sms-btn text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg transition">
+                UPI Credit (+₹2,500)
+              </button>
+              <button type="button" data-sample="grocery" class="sample-sms-btn text-xs bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg transition">
+                Reliance Fresh (₹1,180)
+              </button>
+              <button type="button" data-sample="refund" class="sample-sms-btn text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg transition">
+                IRCTC Credit (+₹640)
+              </button>
+            </div>
+          </div>
+
+          <!-- SMS Textarea -->
+          <div>
+            <label for="smsInputText" class="block text-xs font-semibold text-slate-700 mb-1">Bank / UPI SMS Message Text</label>
+            <textarea id="smsInputText" rows="3" placeholder="e.g. Rs. 450.00 debited from A/c XX1234 on 16-10-26 to VPA swiggy@ybl (UPI Ref No 628914521098)." class="w-full rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 text-xs p-3 text-slate-800 placeholder-slate-400 outline-none transition"></textarea>
+          </div>
+
+          <!-- Live Parsed Preview Card -->
+          <div id="smsPreviewCard" class="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Live Parser Detection</span>
+              <span id="previewBadgeStatus" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Waiting for SMS...</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 text-xs">
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                <span class="text-slate-400 block text-[11px]">Detected Amount</span>
+                <span id="previewAmount" class="font-bold text-slate-800 text-sm">—</span>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                <span class="text-slate-400 block text-[11px]">Transaction Type</span>
+                <span id="previewType" class="font-bold text-slate-800 text-sm">—</span>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                <span class="text-slate-400 block text-[11px]">Merchant / VPA</span>
+                <span id="previewMerchant" class="font-semibold text-slate-800 truncate block">—</span>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200/80">
+                <span class="text-slate-400 block text-[11px]">Date & UPI Ref</span>
+                <span id="previewDateRef" class="font-semibold text-slate-800 truncate block">—</span>
+              </div>
+            </div>
+
+            <div class="pt-1 flex items-center gap-2">
+              <label for="smsCategoryOverride" class="text-xs font-medium text-slate-600 shrink-0">Category:</label>
+              <select id="smsCategoryOverride" class="w-full rounded-lg border border-slate-300 bg-white text-xs py-1.5 px-2.5 text-slate-700 outline-none focus:border-indigo-500">
+                <option value="Auto">Auto-Detect from Merchant</option>
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Transport & Fuel">Transport & Fuel</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Transfer / People">Transfer / People</option>
+                <option value="Salary / Income">Salary / Income</option>
+                <option value="Refund / Cashback">Refund / Cashback</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnRecordSms" type="button" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              <span>Record UPI Transaction</span>
+            </button>
+            <button id="btnClearSms" type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-xs py-2.5 px-3 rounded-xl transition">
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- Panel 2: Manual Transaction Form -->
+        <form id="panelManualMode" class="p-5 space-y-4 hidden">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Add Manual Transaction Record</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Log cash spends, manual UPI payments, bank transfers, or salary credits.</p>
+          </div>
+
+          <!-- Debit / Credit Selector -->
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+            <button type="button" id="manualTypeDebitBtn" class="py-2 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow-sm">
+              Debit / Spend (-)
+            </button>
+            <button type="button" id="manualTypeCreditBtn" class="py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900">
+              Credit / Received (+)
+            </button>
+          </div>
+          <input type="hidden" id="manualTypeInput" value="debit" />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="manualAmount" class="block text-xs font-semibold text-slate-700 mb-1">Amount (₹) *</label>
+              <input id="manualAmount" type="number" step="0.01" min="0.01" required placeholder="e.g. 250" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+            </div>
+            <div>
+              <label for="manualDate" class="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+              <input id="manualDate" type="date" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="manualMerchant" class="block text-xs font-semibold text-slate-700 mb-1">Merchant / Title *</label>
+              <input id="manualMerchant" type="text" required placeholder="e.g. Tea & Snacks, Electricity Bill" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none" />
+            </div>
+            <div>
+              <label for="manualCategory" class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+              <select id="manualCategory" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 outline-none">
+                <option value="Food & Dining">Food & Dining</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Transport & Fuel">Transport & Fuel</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills & Utilities">Bills & Utilities</option>
+                <option value="Transfer / People">Transfer / People</option>
+                <option value="Salary / Income">Salary / Income</option>
+                <option value="Refund / Cashback">Refund / Cashback</option>
+                <option value="Health & Medical">Health & Medical</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="manualMode" class="block text-xs font-semibold text-slate-700 mb-1">Payment Mode</label>
+              <select id="manualMode" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 outline-none">
+                <option value="UPI">UPI</option>
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Card">Debit / Credit Card</option>
+              </select>
+            </div>
+            <div>
+              <label for="manualRef" class="block text-xs font-semibold text-slate-700 mb-1">UPI Ref / Note (Optional)</label>
+              <input id="manualRef" type="text" placeholder="e.g. Paid via PhonePe" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 outline-none" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Save Manual Transaction</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Column: Day-wise, Calendar Month, and Year Reports + Transaction Ledger -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- Time Horizon Navigation Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- View Mode Tabs: Day-wise | Calendar Month | Yearly -->
+            <div class="inline-flex rounded-xl bg-slate-100 p-1 gap-1">
+              <button type="button" id="viewTabDay" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-900 shadow-sm">
+                Day-wise
+              </button>
+              <button type="button" id="viewTabMonth" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
+                Calendar Month
+              </button>
+              <button type="button" id="viewTabYear" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
+                Year-wise
+              </button>
+            </div>
+
+            <!-- Period Controls -->
+            <div id="controlsDay" class="flex items-center gap-2">
+              <button type="button" id="btnPrevDay" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Previous Day">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <input type="date" id="filterDatePicker" class="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-indigo-500" />
+              <button type="button" id="btnNextDay" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Next Day">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+              <button type="button" id="btnShowAllDaysInMonth" class="text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition">
+                All Days Grouped
+              </button>
+            </div>
+
+            <div id="controlsMonth" class="hidden flex items-center gap-2">
+              <button type="button" id="btnPrevMonth" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Previous Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <select id="filterMonthSelect" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+              </select>
+              <select id="filterMonthYearSelect" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none"></select>
+              <button type="button" id="btnNextMonth" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Next Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+
+            <div id="controlsYear" class="hidden flex items-center gap-2">
+              <button type="button" id="btnPrevYear" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Previous Year">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              <select id="filterYearSelect" class="rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-800 outline-none"></select>
+              <button type="button" id="btnNextYear" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600" title="Next Year">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Monthly Calendar Container (Visible in Calendar Month Mode) -->
+          <div id="calendarMonthViewContainer" class="hidden pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-xs font-semibold text-slate-600">Click any date on the calendar to inspect that day's transactions:</p>
+              <span class="text-[11px] text-slate-400">Green = Credit • Red = Debit</span>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400 pb-1">
+              <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+            </div>
+            <div id="calendarGridCells" class="grid grid-cols-7 gap-1.5"></div>
+          </div>
+
+          <!-- Yearly 12-Month Breakdown Container (Visible in Year-wise Mode) -->
+          <div id="yearBreakdownContainer" class="hidden pt-2 border-t border-slate-100 space-y-2">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-semibold text-slate-700">12-Month Summary (<span id="yearSummaryTitle">2026</span>)</p>
+              <span class="text-[11px] text-slate-400">Click any month row to open its Calendar Month view</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-400 uppercase text-[10px]">
+                    <th class="py-2 px-2">Month</th>
+                    <th class="py-2 px-2 text-right">Credit (+)</th>
+                    <th class="py-2 px-2 text-right">Debit (-)</th>
+                    <th class="py-2 px-2 text-right">Net Balance</th>
+                    <th class="py-2 px-2 text-right">Txns</th>
+                  </tr>
+                </thead>
+                <tbody id="yearBreakdownTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transaction List & Filter Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 id="ledgerHeadingTitle" class="text-sm font-bold text-slate-900">Day-wise Transaction Log</h3>
+              <p id="ledgerSubTitle" class="text-xs text-slate-500">Grouped by day with daily credit & debit subtotals</p>
+            </div>
+
+            <div class="flex items-center flex-wrap gap-2">
+              <!-- Type Filter -->
+              <select id="filterTxnType" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none">
+                <option value="all">All (Credit & Debit)</option>
+                <option value="debit">Debits / Spends Only</option>
+                <option value="credit">Credits / Income Only</option>
+              </select>
+
+              <!-- Search Input -->
+              <div class="relative">
+                <input id="searchTxnInput" type="text" placeholder="Search merchant, ref..." class="rounded-lg border border-slate-300 pl-7 pr-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-500 w-40 sm:w-48" />
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day-wise Grouped List Container -->
+          <div id="transactionsListContainer" class="divide-y divide-slate-100 max-h-[540px] overflow-y-auto custom-scroll"></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal 1: Backup & Restore Modal -->
+  <div id="modalBackup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <h3 class="text-sm font-bold text-slate-900">Backup, Export & Restore Data</h3>
+        </div>
+        <button type="button" id="btnCloseBackup" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-5 text-xs">
+        <div class="space-y-2">
+          <h4 class="font-bold text-slate-800">1. Download Backup File</h4>
+          <p class="text-slate-500">Save a full copy of your transaction records to your phone or computer so you never lose your history.</p>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button type="button" id="btnDownloadJson" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-3.5 py-2 rounded-xl transition inline-flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Download JSON Backup</span>
+            </button>
+            <button type="button" id="btnDownloadCsv" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3.5 py-2 rounded-xl transition inline-flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Export CSV (Excel / Sheets)</span>
+            </button>
+            <button type="button" id="btnCopyBackupClipboard" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl transition">
+              Copy Backup JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-4 space-y-2">
+          <h4 class="font-bold text-slate-800">2. Restore from Backup File or JSON</h4>
+          <p class="text-slate-500">Upload a previously saved <code class="bg-slate-100 px-1 py-0.5 rounded">.json</code> backup file or paste backup JSON below.</p>
+          <div class="flex items-center gap-2">
+            <input type="file" id="inputRestoreFile" accept=".json" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+          </div>
+          <div class="pt-2 space-y-2">
+            <textarea id="textareaRestoreJson" rows="3" placeholder='Or paste backup JSON array here...' class="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-mono text-slate-700 outline-none focus:border-indigo-500"></textarea>
+            <button type="button" id="btnRestoreFromTextarea" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-3.5 py-2 rounded-xl transition">
+              Restore Pasted JSON
+            </button>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-200 pt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-rose-700">Reset / Clear All Data</h4>
+            <p class="text-slate-500">Reload demo records or wipe all transactions.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btnReloadDemoData" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition">
+              Reset Demo Data
+            </button>
+            <button type="button" id="btnClearAllData" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold px-3 py-1.5 rounded-lg transition">
+              Clear All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Beginner's Code Walkthrough Guide -->
+  <div id="modalCodeGuide" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-xl overflow-hidden max-h-[85vh] flex flex-col">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center">?</span>
+          <h3 class="text-sm font-bold text-slate-900">How Your App Works — Beginner's Step-by-Step Guide</h3>
+        </div>
+        <button type="button" id="btnCloseCodeGuide" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-600">
+        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
+          <h4 class="font-bold text-indigo-950 text-sm">1. The UPI SMS Regex Parser (<code class="text-indigo-700">parseUpiSms()</code>)</h4>
+          <p class="mt-1">When a bank sends a UPI message, it follows predictable patterns like <code class="bg-white px-1 rounded">Rs. 450.00 debited</code> or <code class="bg-white px-1 rounded">credited with INR 2500</code>. Our JavaScript function uses <strong>Regular Expressions (Regex)</strong> to scan the text for:</p>
+          <ul class="list-disc list-inside mt-1.5 space-y-1 text-slate-700">
+            <li><strong>Amount:</strong> Matches <code class="bg-white px-1 rounded">(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d{1,2})?)</code></li>
+            <li><strong>Type (Debit vs. Credit):</strong> Checks for words like <code class="bg-white px-1 rounded">debited / spent / paid / sent</code> vs. <code class="bg-white px-1 rounded">credited / received / deposited</code>.</li>
+            <li><strong>Merchant / VPA & Ref ID:</strong> Extracts the UPI ID (like <code class="bg-white px-1 rounded">swiggy@ybl</code>) and the 12-digit UPI Reference number.</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-100">
+          <h4 class="font-bold text-emerald-950 text-sm">2. Connecting to Your Phone's Message App</h4>
+          <p class="mt-1">For privacy, mobile browsers don't allow websites to silently read all your private SMS messages in the background. You have two easy ways to use this on your phone:</p>
+          <ul class="list-disc list-inside mt-1.5 space-y-1 text-slate-700">
+            <li><strong>Copy & Paste (Instant):</strong> With <em>Auto-Log on Paste</em> checked, pasting any bank SMS immediately records it.</li>
+            <li><strong>Automatic SMS Forwarding (Next Step!):</strong> Our app also listens for <code class="bg-white px-1 rounded">?sms=...</code> in its web link! Using a free Android automation app (like MacroDroid or Tasker) or iOS Shortcuts, whenever an SMS containing "UPI" arrives, your phone can automatically open this app with the message text and record it hands-free.</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-200">
+          <h4 class="font-bold text-slate-900 text-sm">3. Day-wise, Calendar Month & Yearly Grouping</h4>
+          <p class="mt-1">Every transaction is stored with an ISO date (<code class="bg-white px-1 rounded">YYYY-MM-DD</code>). The app filters your list by matching the full date (<code class="bg-white px-1 rounded">2026-10-16</code>) for Day view, the year+month (<code class="bg-white px-1 rounded">2026-10</code>) for Calendar Month view, or the 4-digit year (<code class="bg-white px-1 rounded">2026</code>) for Yearly view.</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-100">
+          <h4 class="font-bold text-amber-950 text-sm">4. Local Storage & Backup Files</h4>
+          <p class="mt-1">All records are saved in your browser's <code class="bg-white px-1 rounded">localStorage</code> so they stay intact when you close or refresh the page, and the Backup tool converts that list into downloadable <code class="bg-white px-1 rounded">.json</code> and <code class="bg-white px-1 rounded">.csv</code> files.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Android 14–16 Real-Time APK & SMS Listener Guide -->
+  <div id="modalApkSetup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-xl overflow-hidden max-h-[88vh] flex flex-col">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-900 text-white">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 font-bold text-xs flex items-center justify-center">APK</span>
+          <div>
+            <h3 class="text-sm font-bold">Real-Time Android 14, 15 & 16 APK Setup</h3>
+            <p class="text-[11px] text-slate-400">Background SMS Receiver + Notification Listener Bridge</p>
+          </div>
+        </div>
+        <button type="button" id="btnCloseApkModal" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-600">
+        <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3">
+          <div>
+            <p class="font-bold text-emerald-950 text-xs">Native Android Bridge Status: <span id="modalBridgeStatusText" class="text-indigo-700">Web Preview Mode (Ready for APK WebView)</span></p>
+            <p class="text-[11px] text-emerald-800 mt-0.5">This app includes <code class="bg-white px-1 rounded">window.onNativeUpiSmsReceived(sms, sender)</code> so the Android APK pushes live bank SMS straight into your ledger.</p>
+          </div>
+          <button type="button" id="btnTestNativeBridge" class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-2 rounded-xl transition text-xs">
+            Test Native Bridge
+          </button>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+          <h4 class="font-bold text-slate-900 text-sm">Option A: Build the Signed APK in 2 Minutes (No PC Needed)</h4>
+          <p>Download the attached <strong><code class="bg-white px-1 rounded">upi_pulse_android_14_16_apk_project.zip</code></strong> file from chat. It includes a complete Android 14–16 (API 34–36) project plus a 1-click GitHub Cloud APK compiler:</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li>Unzip the project and upload the files to a free GitHub repository (or open in Android Studio).</li>
+            <li>Click the <strong>Actions</strong> tab in GitHub — the included <code class="bg-white px-1 rounded">build-apk.yml</code> workflow automatically compiles <code class="bg-white px-1 rounded">UPI-Pulse-Android14-16-debug.apk</code> in the cloud.</li>
+            <li>Download and install the <code class="bg-white px-1 rounded">.apk</code> on your Android 14, 15, or 16 phone.</li>
+          </ol>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 space-y-1.5">
+          <h4 class="font-bold text-amber-950 text-sm">Important for Android 14, 15 & 16: "Allow Restricted Settings"</h4>
+          <p class="text-slate-700">Starting in Android 14, Android blocks sideloaded APKs from reading SMS or notifications until you unlock Restricted Settings once:</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li>After installing the APK, open <strong>Settings → Apps → UPI Pulse</strong>.</li>
+            <li>Tap the <strong>⋮ (Three Dots)</strong> menu in the top-right corner and tap <strong>Allow restricted settings</strong> (verify with your fingerprint/PIN).</li>
+            <li>Grant <strong>SMS Permission</strong> and enable <strong>UPI Pulse Notification Listener</strong> so the app captures every UPI SMS & GPay/PhonePe/Bank alert in real time—even when the app is closed!</li>
+          </ol>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 space-y-1.5">
+          <h4 class="font-bold text-indigo-950 text-sm">Option B: Instant Real-Time SMS Without Building an APK (MacroDroid Bridge)</h4>
+          <p class="text-slate-700">If you install this web app via Chrome (<strong>⋮ → Add to Home screen → Install App</strong>), you can use the free <strong>MacroDroid</strong> Android app to forward incoming SMS automatically:</p>
+          <ul class="list-disc list-inside space-y-1 text-slate-700">
+            <li><strong>Trigger:</strong> SMS Received (Content contains <code class="bg-white px-1 rounded">UPI</code> or <code class="bg-white px-1 rounded">debited</code> or <code class="bg-white px-1 rounded">credited</code>).</li>
+            <li><strong>Action:</strong> Open Website / URL → pass <code class="bg-white px-1 rounded">?sms={sms_message}</code> to your app link. It will auto-parse and save the record immediately!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 1. INITIAL DEMO DATA & STATE ---
+    const STORAGE_KEY = 'upi_pulse_transactions_v1';
+    const TODAY_STR = '2026-10-16';
+
+    const DEFAULT_TRANSACTIONS = [
+      {
+        id: 'txn_101',
+        date: '2026-10-16',
+        time: '16:40',
+        type: 'debit',
+        amount: 450.00,
+        merchant: 'swiggy@ybl (Swiggy)',
+        category: 'Food & Dining',
+        mode: 'UPI SMS',
+        ref: '628914521098',
+        rawSms: 'Rs. 450.00 debited from A/c XX4821 on 16-10-26 to VPA swiggy@ybl (UPI Ref No 628914521098).'
+      },
+      {
+        id: 'txn_102',
+        date: '2026-10-16',
+        time: '11:15',
+        type: 'credit',
+        amount: 2500.00,
+        merchant: 'rahul.sharma@okaxis',
+        category: 'Transfer / People',
+        mode: 'UPI SMS',
+        ref: '628909812340',
+        rawSms: 'Your A/c XX4821 is credited with INR 2,500.00 on 16-10-26 from VPA rahul.sharma@okaxis (UPI Ref 628909812340).'
+      },
+      {
+        id: 'txn_103',
+        date: '2026-10-16',
+        time: '08:50',
+        type: 'debit',
+        amount: 60.00,
+        merchant: 'Morning Filter Coffee & Auto',
+        category: 'Transport & Fuel',
+        mode: 'Manual (Cash)',
+        ref: 'Manual Entry',
+        rawSms: ''
+      },
+      {
+        id: 'txn_104',
+        date: '2026-10-15',
+        time: '19:20',
+        type: 'debit',
+        amount: 1180.00,
+        merchant: 'reliancefresh@hdfcbank',
+        category: 'Groceries',
+        mode: 'UPI SMS',
+        ref: '628877341290',
+        rawSms: 'INR 1,180.00 debited from A/c XX4821 on 15-10-26 to VPA reliancefresh@hdfcbank. UPI:628877341290.'
+      },
+      {
+        id: 'txn_105',
+        date: '2026-10-12',
+        time: '14:05',
+        type: 'debit',
+        amount: 799.00,
+        merchant: 'jiofiber@axisbank',
+        category: 'Bills & Utilities',
+        mode: 'UPI SMS',
+        ref: '628551209844',
+        rawSms: 'Rs. 799.00 debited from A/c XX4821 on 12-10-26 to VPA jiofiber@axisbank (UPI Ref 628551209844).'
+      },
+      {
+        id: 'txn_106',
+        date: '2026-10-01',
+        time: '09:30',
+        type: 'credit',
+        amount: 48500.00,
+        merchant: 'Monthly Salary Credit',
+        category: 'Salary / Income',
+        mode: 'Bank Transfer',
+        ref: 'NEFT-OCT2026',
+        rawSms: ''
+      },
+      {
+        id: 'txn_107',
+        date: '2026-09-24',
+        time: '20:15',
+        type: 'debit',
+        amount: 1850.00,
+        merchant: 'amazonpay@apl',
+        category: 'Shopping',
+        mode: 'UPI SMS',
+        ref: '626711908231',
+        rawSms: 'Rs. 1850.00 debited from A/c XX4821 on 24-09-26 to VPA amazonpay@apl.'
+      },
+      {
+        id: 'txn_108',
+        date: '2026-09-01',
+        time: '10:00',
+        type: 'credit',
+        amount: 48500.00,
+        merchant: 'Monthly Salary Credit',
+        category: 'Salary / Income',
+        mode: 'Bank Transfer',
+        ref: 'NEFT-SEP2026',
+        rawSms: ''
+      },
+      {
+        id: 'txn_109',
+        date: '2025-12-18',
+        time: '18:10',
+        type: 'debit',
+        amount: 3200.00,
+        merchant: 'makemytrip@icici',
+        category: 'Transport & Fuel',
+        mode: 'UPI SMS',
+        ref: '535211098765',
+        rawSms: 'Rs. 3200.00 debited from A/c XX4821 on 18-12-25 to VPA makemytrip@icici.'
+      }
+    ];
+
+    const SAMPLE_SMS_MESSAGES = {
+      swiggy: 'Rs. 450.00 debited from A/c XX4821 on 16-10-26 to VPA swiggy@ybl (UPI Ref No 628914521098). Not you? Call 18002586161.',
+      credit_friend: 'Your A/c XX4821 is credited with INR 2,500.00 on 16-10-26 by VPA ananya.rao@okicici (UPI Ref No 628955432189).',
+      grocery: 'Dear Customer, INR 1,180.50 has been debited from A/c XX4821 on 16-10-2026 towards VPA reliancefresh@hdfcbank. UPI Ref: 628999112233.',
+      refund: 'Dear UPI user, your A/c XX4821 is credited by Rs. 640.00 on 16-10-26 from VPA irctcrefund@sbi. Ref No 628977889900.'
+    };
+
+    const SIMULATED_INCOMING_POOL = [
+      'Alert: Rs. 120.00 debited from A/c XX4821 on 16-10-26 to VPA chaiwala.hyd@okaxis (UPI Ref No 628933109281).',
+      'Your A/c XX4821 is credited with Rs. 1,500.00 on 16-10-26 from VPA kiran.kumar@ybl (UPI Ref No 628944881122).',
+      'INR 349.00 debited from HDFC Bank A/c XX4821 on 16-10-26 to VPA zomato@hdfcbank. UPI Ref: 628966554433.',
+      'Rs. 550.00 debited from A/c XX4821 on 16-10-26 to VPA hpclfuel@sbi (UPI Ref No 628977112299).',
+      'Your A/c XX4821 is credited by INR 850.00 on 16-10-26 from VPA splitwise.friend@okhdfcbank (UPI Ref 628988001122).'
+    ];
+
+    let transactions = [];
+    let currentViewMode = 'day'; // 'day' | 'month' | 'year'
+    let dayViewShowAllInMonth = true;
+    let selectedDate = TODAY_STR;
+    let selectedMonth = 9; // October (0-indexed)
+    let selectedYear = 2026;
+    let simulatedIndex = 0;
+
+    // --- 2. STORAGE HELPERS ---
+    function loadTransactions() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            transactions = parsed;
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('localStorage read fallback:', err);
+      }
+      transactions = JSON.parse(JSON.stringify(DEFAULT_TRANSACTIONS));
+      saveTransactions();
+    }
+
+    function saveTransactions() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      } catch (err) {
+        console.warn('localStorage write fallback:', err);
+      }
+    }
+
+    // --- 3. SMART UPI SMS REGEX PARSER ---
+    function inferCategoryFromMerchant(merchantText, type) {
+      const m = (merchantText || '').toLowerCase();
+      if (type === 'credit') {
+        if (m.includes('refund') || m.includes('irctc') || m.includes('cashback')) return 'Refund / Cashback';
+        if (m.includes('salary') || m.includes('neft')) return 'Salary / Income';
+        return 'Transfer / People';
+      }
+      if (m.includes('swiggy') || m.includes('zomato') || m.includes('chai') || m.includes('cafe') || m.includes('food') || m.includes('restaurant')) return 'Food & Dining';
+      if (m.includes('reliance') || m.includes('fresh') || m.includes('mart') || m.includes('blinkit') || m.includes('zepto') || m.includes('bigbasket') || m.includes('grocery')) return 'Groceries';
+      if (m.includes('uber') || m.includes('ola') || m.includes('rapido') || m.includes('fuel') || m.includes('hpcl') || m.includes('petrol') || m.includes('irctc') || m.includes('makemytrip')) return 'Transport & Fuel';
+      if (m.includes('jio') || m.includes('airtel') || m.includes('bescom') || m.includes('electricity') || m.includes('bill') || m.includes('recharge')) return 'Bills & Utilities';
+      if (m.includes('amazon') || m.includes('flipkart') || m.includes('myntra') || m.includes('shop')) return 'Shopping';
+      return 'Transfer / People';
+    }
+
+    function parseUpiSms(text) {
+      const raw = (text || '').trim();
+      if (!raw) return null;
+
+      // 1. Extract Amount (matches Rs. 450, INR 1,200.50, ₹ 500)
+      const amountRegex = /(?:Rs\.?|INR|₹)\s*([\d,]+(?:\.\d{1,2})?)/i;
+      const fallbackAmountRegex = /([\d,]+(?:\.\d{1,2})?)\s*(?:has been|is)?\s*(?:debited|credited|spent|paid|received)/i;
+      let amount = null;
+      const amtMatch = raw.match(amountRegex) || raw.match(fallbackAmountRegex);
+      if (amtMatch && amtMatch[1]) {
+        amount = parseFloat(amtMatch[1].replace(/,/g, ''));
+      }
+
+      // 2. Detect Type: Credit vs Debit
+      let type = 'debit';
+      const lower = raw.toLowerCase();
+      const hasCredit = /\b(credited|received|deposited|added|refund)\b/i.test(lower);
+      const hasDebit = /\b(debited|spent|paid|sent|withdrawn|deducted)\b/i.test(lower);
+      if (hasCredit && !hasDebit) {
+        type = 'credit';
+      } else if (hasCredit && hasDebit) {
+        // Check whichever keyword appears first
+        const cIdx = lower.search(/\b(credited|received|deposited)\b/);
+        const dIdx = lower.search(/\b(debited|spent|paid|sent)\b/);
+        if (cIdx !== -1 && (dIdx === -1 || cIdx < dIdx)) type = 'credit';
+      }
+
+      // 3. Extract Merchant / VPA
+      let merchant = 'UPI Transaction';
+      const vpaMatch = raw.match(/([a-zA-Z0-9.\-_]+@[a-zA-Z0-9]+)/);
+      const toFromMatch = raw.match(/(?:to|from|towards|by)\s+(?:VPA\s+)?([A-Za-z0-9.\-_@ ]{3,30}?)(?:\s+on\b|\s*\(|\s*\.|\s+UPI|\s+Ref|$)/i);
+      if (vpaMatch && vpaMatch[1]) {
+        merchant = vpaMatch[1];
+      } else if (toFromMatch && toFromMatch[1]) {
+        merchant = toFromMatch[1].trim();
+      }
+
+      // 4. Extract UPI Reference Number (typically 12 digits)
+      let ref = 'UPI-SMS';
+      const refMatch = raw.match(/(?:Ref(?:\s*No)?\.?|UPI(?:\s*Ref)?\s*[:\-]?)\s*(\d{9,14})/i) || raw.match(/\b(\d{12})\b/);
+      if (refMatch && refMatch[1]) {
+        ref = refMatch[1];
+      }
+
+      // 5. Extract Date (matches DD-MM-YY, DD/MM/YYYY, or YYYY-MM-DD; defaults to TODAY_STR)
+      let dateStr = TODAY_STR;
+      const dmyMatch = raw.match(/\b(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})\b/);
+      if (dmyMatch) {
+        const d = String(dmyMatch[1]).padStart(2, '0');
+        const m = String(dmyMatch[2]).padStart(2, '0');
+        let y = String(dmyMatch[3]);
+        if (y.length === 2) y = '20' + y;
+        if (parseInt(m, 10) >= 1 && parseInt(m, 10) <= 12 && parseInt(d, 10) >= 1 && parseInt(d, 10) <= 31) {
+          dateStr = `${y}-${m}-${d}`;
+        }
+      }
+
+      const categoryOverride = document.getElementById('smsCategoryOverride').value;
+      const category = categoryOverride !== 'Auto' ? categoryOverride : inferCategoryFromMerchant(merchant, type);
+
+      return {
+        amount: amount && !isNaN(amount) ? amount : null,
+        type,
+        merchant,
+        ref,
+        date: dateStr,
+        category,
+        rawSms: raw
+      };
+    }
+
+    // --- 4. FORMATTING HELPERS ---
+    function formatCurrency(num) {
+      const val = Number(num || 0);
+      return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatReadableDate(isoDate) {
+      if (!isoDate) return '';
+      const parts = isoDate.split('-');
+      if (parts.length !== 3) return isoDate;
+      const dateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return dateObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    const MONTH_NAMES = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    function showToast(title, subtitle, tone) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      const borderColor = tone === 'credit' ? 'border-emerald-500' : tone === 'debit' ? 'border-rose-500' : 'border-indigo-500';
+      toast.className = `pointer-events-auto bg-slate-900 text-white rounded-xl p-3.5 shadow-lg border-l-4 ${borderColor} flex items-start justify-between gap-3 animate-slide-down`;
+      toast.innerHTML = `
+        <div class="text-xs">
+          <p class="font-bold text-white">${title}</p>
+          <p class="text-slate-300 mt-0.5">${subtitle}</p>
+        </div>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 4000);
+    }
+
+    // --- 5. LIVE SMS PREVIEW UPDATER ---
+    function updateSmsLivePreview() {
+      const text = document.getElementById('smsInputText').value;
+      const badge = document.getElementById('previewBadgeStatus');
+      const pAmt = document.getElementById('previewAmount');
+      const pType = document.getElementById('previewType');
+      const pMerch = document.getElementById('previewMerchant');
+      const pDateRef = document.getElementById('previewDateRef');
+
+      const parsed = parseUpiSms(text);
+      if (!parsed || !parsed.amount) {
+        badge.textContent = text.trim() ? 'Need Amount (e.g. Rs. 250)' : 'Waiting for SMS...';
+        badge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+        pAmt.textContent = '—';
+        pType.textContent = '—';
+        pMerch.textContent = '—';
+        pDateRef.textContent = '—';
+        return null;
+      }
+
+      badge.textContent = 'Ready to Record';
+      badge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+      pAmt.textContent = formatCurrency(parsed.amount);
+      pAmt.className = parsed.type === 'credit' ? 'font-bold text-emerald-600 text-sm' : 'font-bold text-rose-600 text-sm';
+      pType.textContent = parsed.type === 'credit' ? 'CREDIT (+ Inflow)' : 'DEBIT (- Spend)';
+      pType.className = parsed.type === 'credit' ? 'font-bold text-emerald-600 text-sm' : 'font-bold text-rose-600 text-sm';
+      pMerch.textContent = `${parsed.merchant} (${parsed.category})`;
+      pDateRef.textContent = `${parsed.date} • Ref: ${parsed.ref}`;
+      return parsed;
+    }
+
+    function recordParsedSmsTransaction(parsed, sourceLabel) {
+      if (!parsed || !parsed.amount) {
+        showToast('Could not detect amount', 'Make sure the SMS includes an amount like "Rs. 450" or "INR 1200".', 'info');
+        return false;
+      }
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const newTxn = {
+        id: 'txn_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+        date: parsed.date || TODAY_STR,
+        time: timeStr,
+        type: parsed.type,
+        amount: parsed.amount,
+        merchant: parsed.merchant,
+        category: parsed.category,
+        mode: sourceLabel || 'UPI SMS',
+        ref: parsed.ref,
+        rawSms: parsed.rawSms
+      };
+      transactions.unshift(newTxn);
+      saveTransactions();
+
+      // Sync view to the transaction's date/month/year so user sees it immediately
+      selectedDate = newTxn.date;
+      const parts = newTxn.date.split('-');
+      if (parts.length === 3) {
+        selectedYear = parseInt(parts[0], 10);
+        selectedMonth = parseInt(parts[1], 10) - 1;
+      }
+      syncSelectorsToState();
+      renderAll();
+
+      const sign = newTxn.type === 'credit' ? '+' : '-';
+      showToast(
+        `UPI ${newTxn.type.toUpperCase()} Recorded (${sign}${formatCurrency(newTxn.amount)})`,
+        `${newTxn.merchant} • ${newTxn.date}`,
+        newTxn.type
+      );
+      return true;
+    }
+
+    // --- 6. RENDERING DAY-WISE, CALENDAR MONTH, AND YEAR VIEWS ---
+    function populateYearDropdowns() {
+      const yearsSet = new Set([2025, 2026, 2027]);
+      transactions.forEach(t => {
+        if (t.date && t.date.length >= 4) {
+          const y = parseInt(t.date.slice(0, 4), 10);
+          if (!isNaN(y)) yearsSet.add(y);
+        }
+      });
+      const years = Array.from(yearsSet).sort((a, b) => b - a);
+      const monthYearSel = document.getElementById('filterMonthYearSelect');
+      const yearSel = document.getElementById('filterYearSelect');
+
+      monthYearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+      yearSel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+
+    function syncSelectorsToState() {
+      populateYearDropdowns();
+      document.getElementById('filterDatePicker').value = selectedDate;
+      document.getElementById('filterMonthSelect').value = String(selectedMonth);
+      document.getElementById('filterMonthYearSelect').value = String(selectedYear);
+      document.getElementById('filterYearSelect').value = String(selectedYear);
+    }
+
+    function getPeriodTransactions() {
+      const monthPrefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+      const yearPrefix = `${selectedYear}-`;
+
+      if (currentViewMode === 'day') {
+        if (dayViewShowAllInMonth) {
+          return transactions.filter(t => t.date.startsWith(monthPrefix));
+        }
+        return transactions.filter(t => t.date === selectedDate);
+      }
+      if (currentViewMode === 'month') {
+        return transactions.filter(t => t.date.startsWith(monthPrefix));
+      }
+      if (currentViewMode === 'year') {
+        return transactions.filter(t => t.date.startsWith(yearPrefix));
+      }
+      return transactions;
+    }
+
+    function renderKpiSummary(periodTxns, periodLabel) {
+      let creditSum = 0;
+      let creditCount = 0;
+      let debitSum = 0;
+      let debitCount = 0;
+
+      periodTxns.forEach(t => {
+        if (t.type === 'credit') {
+          creditSum += Number(t.amount || 0);
+          creditCount++;
+        } else {
+          debitSum += Number(t.amount || 0);
+          debitCount++;
+        }
+      });
+
+      const net = creditSum - debitSum;
+      document.getElementById('kpiPeriodLabelCredit').textContent = periodLabel;
+      document.getElementById('kpiPeriodLabelDebit').textContent = periodLabel;
+      document.getElementById('kpiPeriodLabelNet').textContent = periodLabel;
+
+      document.getElementById('kpiTotalCredit').textContent = '+' + formatCurrency(creditSum);
+      document.getElementById('kpiCountCredit').textContent = `${creditCount} credit record${creditCount === 1 ? '' : 's'}`;
+
+      document.getElementById('kpiTotalDebit').textContent = '-' + formatCurrency(debitSum);
+      document.getElementById('kpiCountDebit').textContent = `${debitCount} debit record${debitCount === 1 ? '' : 's'}`;
+
+      const netEl = document.getElementById('kpiNetBalance');
+      netEl.textContent = (net >= 0 ? '+' : '-') + formatCurrency(Math.abs(net));
+      netEl.className = `text-2xl font-bold mt-1 ${net >= 0 ? 'text-slate-900' : 'text-rose-600'}`;
+      document.getElementById('kpiTotalCount').textContent = `${periodTxns.length} total record${periodTxns.length === 1 ? '' : 's'} in period`;
+    }
+
+    function renderCalendarMonthGrid() {
+      const grid = document.getElementById('calendarGridCells');
+      grid.innerHTML = '';
+
+      const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1).getDay();
+      const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+      const monthPrefix = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+      // Aggregate daily totals
+      const dailyMap = {};
+      transactions.forEach(t => {
+        if (t.date.startsWith(monthPrefix)) {
+          if (!dailyMap[t.date]) dailyMap[t.date] = { credit: 0, debit: 0, count: 0 };
+          if (t.type === 'credit') dailyMap[t.date].credit += Number(t.amount || 0);
+          else dailyMap[t.date].debit += Number(t.amount || 0);
+          dailyMap[t.date].count++;
+        }
+      });
+
+      // Blank leading cells
+      for (let i = 0; i < firstDayOfMonth; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'h-16 rounded-xl bg-slate-50/50 border border-transparent';
+        grid.appendChild(blank);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const iso = `${monthPrefix}-${String(day).padStart(2, '0')}`;
+        const stats = dailyMap[iso];
+        const isSelected = iso === selectedDate && !dayViewShowAllInMonth;
+
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = `h-16 rounded-xl p-1.5 border text-left flex flex-col justify-between transition overflow-hidden ${
+          isSelected
+            ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-500/20'
+            : stats
+            ? 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-xs'
+            : 'border-slate-100 bg-slate-50/60 hover:bg-white text-slate-400'
+        }`;
+
+        let badgesHtml = '';
+        if (stats) {
+          if (stats.credit > 0) {
+            badgesHtml += `<span class="block text-[10px] font-bold text-emerald-600 truncate">+₹${Math.round(stats.credit).toLocaleString('en-IN')}</span>`;
+          }
+          if (stats.debit > 0) {
+            badgesHtml += `<span class="block text-[10px] font-bold text-rose-600 truncate">-₹${Math.round(stats.debit).toLocaleString('en-IN')}</span>`;
+          }
+        }
+
+        cell.innerHTML = `
+          <div class="flex items-center justify-between w-full">
+            <span class="text-xs font-bold ${stats ? 'text-slate-800' : 'text-slate-400'}">${day}</span>
+            ${stats ? `<span class="text-[9px] px-1 rounded bg-slate-100 text-slate-500 font-semibold">${stats.count}</span>` : ''}
+          </div>
+          <div class="leading-tight">${badgesHtml}</div>
+        `;
+
+        cell.addEventListener('click', () => {
+          selectedDate = iso;
+          dayViewShowAllInMonth = false;
+          currentViewMode = 'day';
+          syncSelectorsToState();
+          renderAll();
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderYearlyBreakdownTable() {
+      document.getElementById('yearSummaryTitle').textContent = String(selectedYear);
+      const tbody = document.getElementById('yearBreakdownTableBody');
+      tbody.innerHTML = '';
+
+      for (let m = 0; m < 12; m++) {
+        const prefix = `${selectedYear}-${String(m + 1).padStart(2, '0')}`;
+        const monthTxns = transactions.filter(t => t.date.startsWith(prefix));
+        let cSum = 0;
+        let dSum = 0;
+        monthTxns.forEach(t => {
+          if (t.type === 'credit') cSum += Number(t.amount || 0);
+          else dSum += Number(t.amount || 0);
+        });
+        const net = cSum - dSum;
+
+        const tr = document.createElement('tr');
+        tr.className = `cursor-pointer transition hover:bg-indigo-50/50 ${monthTxns.length === 0 ? 'opacity-50' : ''}`;
+        tr.innerHTML = `
+          <td class="py-2.5 px-2 font-semibold text-slate-800">${MONTH_NAMES[m]} ${selectedYear}</td>
+          <td class="py-2.5 px-2 text-right font-semibold text-emerald-600">${cSum > 0 ? '+' + formatCurrency(cSum) : '—'}</td>
+          <td class="py-2.5 px-2 text-right font-semibold text-rose-600">${dSum > 0 ? '-' + formatCurrency(dSum) : '—'}</td>
+          <td class="py-2.5 px-2 text-right font-bold ${net >= 0 ? 'text-slate-800' : 'text-rose-600'}">${monthTxns.length > 0 ? (net >= 0 ? '+' : '-') + formatCurrency(Math.abs(net)) : '—'}</td>
+          <td class="py-2.5 px-2 text-right text-slate-500">${monthTxns.length}</td>
+        `;
+        tr.addEventListener('click', () => {
+          selectedMonth = m;
+          currentViewMode = 'month';
+          syncSelectorsToState();
+          renderAll();
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderTransactionsList(periodTxns) {
+      const container = document.getElementById('transactionsListContainer');
+      const typeFilter = document.getElementById('filterTxnType').value;
+      const searchQ = document.getElementById('searchTxnInput').value.trim().toLowerCase();
+
+      const filtered = periodTxns.filter(t => {
+        if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+        if (searchQ) {
+          const hay = `${t.merchant} ${t.category} ${t.ref} ${t.mode} ${t.date}`.toLowerCase();
+          if (!hay.includes(searchQ)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-10 text-center space-y-2">
+            <p class="text-sm font-semibold text-slate-700">No transactions found for this view</p>
+            <p class="text-xs text-slate-400">Paste a UPI SMS on the left, click "Simulate Incoming UPI SMS", or switch the date/month filter above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group transactions by date (descending)
+      const groupedByDate = {};
+      filtered.forEach(t => {
+        if (!groupedByDate[t.date]) groupedByDate[t.date] = [];
+        groupedByDate[t.date].push(t);
+      });
+
+      const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+      container.innerHTML = '';
+
+      sortedDates.forEach(dateKey => {
+        const dayTxns = groupedByDate[dateKey];
+        let dayCredit = 0;
+        let dayDebit = 0;
+        dayTxns.forEach(t => {
+          if (t.type === 'credit') dayCredit += Number(t.amount || 0);
+          else dayDebit += Number(t.amount || 0);
+        });
+
+        const daySection = document.createElement('div');
+        daySection.className = 'bg-white';
+
+        const headerBar = document.createElement('div');
+        headerBar.className = 'bg-slate-50/90 px-4 py-2 border-y border-slate-100 flex items-center justify-between text-xs';
+        headerBar.innerHTML = `
+          <span class="font-bold text-slate-700">${formatReadableDate(dateKey)}</span>
+          <div class="flex items-center gap-3">
+            ${dayCredit > 0 ? `<span class="text-emerald-600 font-semibold">+${formatCurrency(dayCredit)}</span>` : ''}
+            ${dayDebit > 0 ? `<span class="text-rose-600 font-semibold">-${formatCurrency(dayDebit)}</span>` : ''}
+          </div>
+        `;
+        daySection.appendChild(headerBar);
+
+        const itemsWrapper = document.createElement('div');
+        itemsWrapper.className = 'divide-y divide-slate-100';
+
+        dayTxns.forEach(t => {
+          const row = document.createElement('div');
+          row.className = 'px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50/60 transition';
+          const isCredit = t.type === 'credit';
+          const badgeClass = t.mode.includes('SMS')
+            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+            : 'bg-slate-100 text-slate-600 border-slate-200';
+
+          row.innerHTML = `
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center font-bold text-xs mt-0.5 ${
+                isCredit ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-rose-50 text-rose-600 border border-rose-200'
+              }">
+                ${isCredit ? 'IN' : 'OUT'}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-xs font-bold text-slate-900 truncate">${t.merchant}</p>
+                  <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded border ${badgeClass}">${t.mode}</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5">
+                  ${t.category} • ${t.time || '12:00'} ${t.ref ? `• Ref: ${t.ref}` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0">
+              <div class="text-right">
+                <p class="text-sm font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}">
+                  ${isCredit ? '+' : '-'}${formatCurrency(t.amount)}
+                </p>
+                <p class="text-[10px] uppercase font-semibold tracking-wider text-slate-400">${t.type}</p>
+              </div>
+              <button type="button" data-delete-id="${t.id}" class="delete-txn-btn text-slate-300 hover:text-rose-600 p-1 rounded-lg transition" title="Delete record">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          `;
+          itemsWrapper.appendChild(row);
+        });
+
+        daySection.appendChild(itemsWrapper);
+        container.appendChild(daySection);
+      });
+
+      // Attach delete listeners
+      container.querySelectorAll('.delete-txn-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-delete-id');
+          transactions = transactions.filter(t => t.id !== id);
+          saveTransactions();
+          renderAll();
+          showToast('Transaction Removed', 'Record deleted from your ledger.', 'info');
+        });
+      });
+    }
+
+    function renderAll() {
+      // Update View Mode tab styles
+      const tabDay = document.getElementById('viewTabDay');
+      const tabMonth = document.getElementById('viewTabMonth');
+      const tabYear = document.getElementById('viewTabYear');
+
+      const activeTabCls = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition bg-white text-slate-900 shadow-sm';
+      const inactiveTabCls = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900';
+
+      tabDay.className = currentViewMode === 'day' ? activeTabCls : inactiveTabCls;
+      tabMonth.className = currentViewMode === 'month' ? activeTabCls : inactiveTabCls;
+      tabYear.className = currentViewMode === 'year' ? activeTabCls : inactiveTabCls;
+
+      // Toggle period control bars
+      document.getElementById('controlsDay').className = currentViewMode === 'day' ? 'flex items-center flex-wrap gap-2' : 'hidden';
+      document.getElementById('controlsMonth').className = currentViewMode === 'month' ? 'flex items-center flex-wrap gap-2' : 'hidden';
+      document.getElementById('controlsYear').className = currentViewMode === 'year' ? 'flex items-center flex-wrap gap-2' : 'hidden';
+
+      document.getElementById('calendarMonthViewContainer').className = currentViewMode === 'month' ? 'pt-2 border-t border-slate-100' : 'hidden';
+      document.getElementById('yearBreakdownContainer').className = currentViewMode === 'year' ? 'pt-2 border-t border-slate-100 space-y-2' : 'hidden';
+
+      const allDaysBtn = document.getElementById('btnShowAllDaysInMonth');
+      if (dayViewShowAllInMonth) {
+        allDaysBtn.textContent = `Showing All Days in ${MONTH_NAMES[selectedMonth].slice(0, 3)}`;
+        allDaysBtn.className = 'text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-600 text-white transition';
+      } else {
+        allDaysBtn.textContent = 'Show All Days in Month';
+        allDaysBtn.className = 'text-xs font-medium px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition';
+      }
+
+      const periodTxns = getPeriodTransactions();
+      let periodLabel = '';
+      if (currentViewMode === 'day') {
+        periodLabel = dayViewShowAllInMonth ? `${MONTH_NAMES[selectedMonth]} ${selectedYear} (Day-wise)` : formatReadableDate(selectedDate);
+        document.getElementById('ledgerHeadingTitle').textContent = dayViewShowAllInMonth
+          ? `Day-wise Log — ${MONTH_NAMES[selectedMonth]} ${selectedYear}`
+          : `Transactions on ${formatReadableDate(selectedDate)}`;
+      } else if (currentViewMode === 'month') {
+        periodLabel = `${MONTH_NAMES[selectedMonth]} ${selectedYear}`;
+        document.getElementById('ledgerHeadingTitle').textContent = `Month Ledger — ${MONTH_NAMES[selectedMonth]} ${selectedYear}`;
+        renderCalendarMonthGrid();
+      } else {
+        periodLabel = `Year ${selectedYear}`;
+        document.getElementById('ledgerHeadingTitle').textContent = `Annual Transaction Log — ${selectedYear}`;
+        renderYearlyBreakdownTable();
+      }
+
+      renderKpiSummary(periodTxns, periodLabel);
+      renderTransactionsList(periodTxns);
+    }
+
+    // --- 7. EVENT LISTENERS & INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTransactions();
+      document.getElementById('manualDate').value = TODAY_STR;
+      syncSelectorsToState();
+      renderAll();
+
+      // Check URL parameter ?sms=... for automated phone SMS forwarding
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const incomingSmsParam = params.get('sms');
+        if (incomingSmsParam) {
+          document.getElementById('smsInputText').value = incomingSmsParam;
+          const parsed = updateSmsLivePreview();
+          if (parsed && parsed.amount) {
+            recordParsedSmsTransaction(parsed, 'UPI SMS Auto');
+          }
+        }
+      } catch (e) {
+        console.warn('URL param check skipped:', e);
+      }
+
+      // Input Mode Tabs (SMS vs Manual)
+      const tabBtnSms = document.getElementById('tabBtnSmsMode');
+      const tabBtnManual = document.getElementById('tabBtnManualMode');
+      const panelSms = document.getElementById('panelSmsMode');
+      const panelManual = document.getElementById('panelManualMode');
+
+      tabBtnSms.addEventListener('click', () => {
+        panelSms.classList.remove('hidden');
+        panelManual.classList.add('hidden');
+        tabBtnSms.className = 'py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-sm border border-slate-200/80';
+        tabBtnManual.className = 'py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900';
+      });
+
+      tabBtnManual.addEventListener('click', () => {
+        panelManual.classList.remove('hidden');
+        panelSms.classList.add('hidden');
+        tabBtnManual.className = 'py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-sm border border-slate-200/80';
+        tabBtnSms.className = 'py-2.5 px-3 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900';
+      });
+
+      // SMS Textarea Live Parsing & Auto-Paste
+      const smsTextarea = document.getElementById('smsInputText');
+      smsTextarea.addEventListener('input', updateSmsLivePreview);
+      document.getElementById('smsCategoryOverride').addEventListener('change', updateSmsLivePreview);
+
+      smsTextarea.addEventListener('paste', () => {
+        setTimeout(() => {
+          const parsed = updateSmsLivePreview();
+          const autoSave = document.getElementById('chkAutoSaveOnPaste').checked;
+          if (autoSave && parsed && parsed.amount) {
+            recordParsedSmsTransaction(parsed, 'UPI SMS');
+          }
+        }, 60);
+      });
+
+      // Sample SMS Buttons
+      document.querySelectorAll('.sample-sms-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-sample');
+          const sampleText = SAMPLE_SMS_MESSAGES[key] || '';
+          smsTextarea.value = sampleText;
+          updateSmsLivePreview();
+        });
+      });
+
+      // Record & Clear SMS Buttons
+      document.getElementById('btnRecordSms').addEventListener('click', () => {
+        const parsed = updateSmsLivePreview();
+        if (recordParsedSmsTransaction(parsed, 'UPI SMS')) {
+          smsTextarea.value = '';
+          updateSmsLivePreview();
+        }
+      });
+
+      document.getElementById('btnClearSms').addEventListener('click', () => {
+        smsTextarea.value = '';
+        updateSmsLivePreview();
+      });
+
+      // Simulate Incoming UPI SMS Button
+      document.getElementById('btnSimulateSms').addEventListener('click', () => {
+        const msg = SIMULATED_INCOMING_POOL[simulatedIndex % SIMULATED_INCOMING_POOL.length];
+        simulatedIndex++;
+        smsTextarea.value = msg;
+        const parsed = updateSmsLivePreview();
+        recordParsedSmsTransaction(parsed, 'UPI SMS Live');
+      });
+
+      // Manual Transaction Type Toggle (Debit vs Credit)
+      const manualDebitBtn = document.getElementById('manualTypeDebitBtn');
+      const manualCreditBtn = document.getElementById('manualTypeCreditBtn');
+      const manualTypeInput = document.getElementById('manualTypeInput');
+
+      manualDebitBtn.addEventListener('click', () => {
+        manualTypeInput.value = 'debit';
+        manualDebitBtn.className = 'py-2 rounded-lg text-xs font-bold transition bg-rose-600 text-white shadow-sm';
+        manualCreditBtn.className = 'py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+      });
+
+      manualCreditBtn.addEventListener('click', () => {
+        manualTypeInput.value = 'credit';
+        manualCreditBtn.className = 'py-2 rounded-lg text-xs font-bold transition bg-emerald-600 text-white shadow-sm';
+        manualDebitBtn.className = 'py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900';
+      });
+
+      // Manual Transaction Submit
+      panelManual.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const amt = parseFloat(document.getElementById('manualAmount').value);
+        const dateVal = document.getElementById('manualDate').value || TODAY_STR;
+        const merch = document.getElementById('manualMerchant').value.trim();
+        const cat = document.getElementById('manualCategory').value;
+        const mode = document.getElementById('manualMode').value;
+        const ref = document.getElementById('manualRef').value.trim();
+        const type = manualTypeInput.value;
+
+        if (!amt || amt <= 0 || !merch) {
+          showToast('Missing Details', 'Please enter a valid amount and merchant/title.', 'info');
+          return;
+        }
+
+        const now = new Date();
+        const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        const newTxn = {
+          id: 'txn_' + Date.now(),
+          date: dateVal,
+          time: timeStr,
+          type,
+          amount: amt,
+          merchant: merch,
+          category: cat,
+          mode: `Manual (${mode})`,
+          ref: ref || 'Manual',
+          rawSms: ''
+        };
+
+        transactions.unshift(newTxn);
+        saveTransactions();
+
+        selectedDate = dateVal;
+        const parts = dateVal.split('-');
+        if (parts.length === 3) {
+          selectedYear = parseInt(parts[0], 10);
+          selectedMonth = parseInt(parts[1], 10) - 1;
+        }
+        syncSelectorsToState();
+        renderAll();
+
+        document.getElementById('manualAmount').value = '';
+        document.getElementById('manualMerchant').value = '';
+        document.getElementById('manualRef').value = '';
+
+        showToast(
+          `Manual ${type.toUpperCase()} Added`,
+          `${merch} • ${formatCurrency(amt)}`,
+          type
+        );
+      });
+
+      // View Mode Switchers (Day / Month / Year)
+      document.getElementById('viewTabDay').addEventListener('click', () => {
+        currentViewMode = 'day';
+        renderAll();
+      });
+      document.getElementById('viewTabMonth').addEventListener('click', () => {
+        currentViewMode = 'month';
+        renderAll();
+      });
+      document.getElementById('viewTabYear').addEventListener('click', () => {
+        currentViewMode = 'year';
+        renderAll();
+      });
+
+      // Day Controls
+      document.getElementById('filterDatePicker').addEventListener('change', (e) => {
+        if (e.target.value) {
+          selectedDate = e.target.value;
+          dayViewShowAllInMonth = false;
+          const parts = selectedDate.split('-');
+          selectedYear = parseInt(parts[0], 10);
+          selectedMonth = parseInt(parts[1], 10) - 1;
+          syncSelectorsToState();
+          renderAll();
+        }
+      });
+
+      function shiftSelectedDay(deltaDays) {
+        const parts = selectedDate.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        d.setDate(d.getDate() + deltaDays);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        selectedDate = `${y}-${m}-${day}`;
+        selectedYear = y;
+        selectedMonth = d.getMonth();
+        dayViewShowAllInMonth = false;
+        syncSelectorsToState();
+        renderAll();
+      }
+
+      document.getElementById('btnPrevDay').addEventListener('click', () => shiftSelectedDay(-1));
+      document.getElementById('btnNextDay').addEventListener('click', () => shiftSelectedDay(1));
+      document.getElementById('btnShowAllDaysInMonth').addEventListener('click', () => {
+        dayViewShowAllInMonth = !dayViewShowAllInMonth;
+        renderAll();
+      });
+
+      // Month Controls
+      document.getElementById('filterMonthSelect').addEventListener('change', (e) => {
+        selectedMonth = parseInt(e.target.value, 10);
+        renderAll();
+      });
+      document.getElementById('filterMonthYearSelect').addEventListener('change', (e) => {
+        selectedYear = parseInt(e.target.value, 10);
+        renderAll();
+      });
+      document.getElementById('btnPrevMonth').addEventListener('click', () => {
+        selectedMonth--;
+        if (selectedMonth < 0) {
+          selectedMonth = 11;
+          selectedYear--;
+        }
+        syncSelectorsToState();
+        renderAll();
+      });
+      document.getElementById('btnNextMonth').addEventListener('click', () => {
+        selectedMonth++;
+        if (selectedMonth > 11) {
+          selectedMonth = 0;
+          selectedYear++;
+        }
+        syncSelectorsToState();
+        renderAll();
+      });
+
+      // Year Controls
+      document.getElementById('filterYearSelect').addEventListener('change', (e) => {
+        selectedYear = parseInt(e.target.value, 10);
+        renderAll();
+      });
+      document.getElementById('btnPrevYear').addEventListener('click', () => {
+        selectedYear--;
+        syncSelectorsToState();
+        renderAll();
+      });
+      document.getElementById('btnNextYear').addEventListener('click', () => {
+        selectedYear++;
+        syncSelectorsToState();
+        renderAll();
+      });
+
+      // Search & Type Filter
+      document.getElementById('filterTxnType').addEventListener('change', renderAll);
+      document.getElementById('searchTxnInput').addEventListener('input', renderAll);
+
+      // Modals: Backup & Code Guide
+      const modalBackup = document.getElementById('modalBackup');
+      const modalCodeGuide = document.getElementById('modalCodeGuide');
+
+      document.getElementById('btnOpenBackup').addEventListener('click', () => {
+        modalBackup.classList.remove('hidden');
+        modalBackup.classList.add('flex');
+      });
+      document.getElementById('btnCloseBackup').addEventListener('click', () => {
+        modalBackup.classList.add('hidden');
+        modalBackup.classList.remove('flex');
+      });
+
+      document.getElementById('btnOpenCodeGuide').addEventListener('click', () => {
+        modalCodeGuide.classList.remove('hidden');
+        modalCodeGuide.classList.add('flex');
+      });
+      document.getElementById('btnCloseCodeGuide').addEventListener('click', () => {
+        modalCodeGuide.classList.add('hidden');
+        modalCodeGuide.classList.remove('flex');
+      });
+
+      const modalApkSetup = document.getElementById('modalApkSetup');
+      document.getElementById('btnOpenApkModal').addEventListener('click', () => {
+        modalApkSetup.classList.remove('hidden');
+        modalApkSetup.classList.add('flex');
+      });
+      document.getElementById('btnCloseApkModal').addEventListener('click', () => {
+        modalApkSetup.classList.add('hidden');
+        modalApkSetup.classList.remove('flex');
+      });
+
+      // Native Android 14-16 WebView Bridge Detection & Real-time Callback
+      window.onNativeUpiSmsReceived = function(smsText, senderAddress) {
+        if (!smsText) return;
+        document.getElementById('smsInputText').value = smsText;
+        const parsed = updateSmsLivePreview();
+        if (parsed && parsed.amount) {
+          recordParsedSmsTransaction(parsed, senderAddress ? `UPI SMS (${senderAddress})` : 'UPI SMS Native');
+        }
+      };
+
+      if (window.AndroidUpiBridge) {
+        const badgeEl = document.getElementById('nativeBridgeStatusBadge');
+        const modalStatusEl = document.getElementById('modalBridgeStatusText');
+        if (badgeEl) badgeEl.textContent = 'Android 14–16 Live SMS Active';
+        if (modalStatusEl) modalStatusEl.textContent = 'Connected to Native Android SMS & Notification Receiver';
+        try {
+          const pendingJson = window.AndroidUpiBridge.consumePendingSmsQueue();
+          if (pendingJson) {
+            const pendingList = JSON.parse(pendingJson);
+            if (Array.isArray(pendingList)) {
+              pendingList.forEach(item => {
+                const p = parseUpiSms(item.body || '');
+                if (p && p.amount) {
+                  recordParsedSmsTransaction(p, item.sender ? `UPI SMS (${item.sender})` : 'UPI SMS Bg');
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('Native bridge queue sync:', err);
+        }
+      }
+
+      document.getElementById('btnTestNativeBridge').addEventListener('click', () => {
+        window.onNativeUpiSmsReceived(
+          'Rs. 275.00 debited from A/c XX4821 on 16-10-26 to VPA metro.rail@axisbank (UPI Ref No 628911223344).',
+          'VM-AXISBK'
+        );
+        modalApkSetup.classList.add('hidden');
+        modalApkSetup.classList.remove('flex');
+      });
+
+      // Backup Download JSON
+      document.getElementById('btnDownloadJson').addEventListener('click', () => {
+        const dataStr = JSON.stringify(transactions, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `upi_expense_backup_${TODAY_STR}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('JSON Backup Downloaded', `Saved ${transactions.length} records to .json file.`, 'credit');
+      });
+
+      // Backup Download CSV
+      document.getElementById('btnDownloadCsv').addEventListener('click', () => {
+        const headers = ['ID', 'Date', 'Time', 'Type', 'Amount', 'Merchant', 'Category', 'Mode', 'Reference'];
+        const rows = transactions.map(t => [
+          t.id,
+          t.date,
+          t.time || '',
+          t.type,
+          t.amount,
+          `"${String(t.merchant || '').replace(/"/g, '""')}"`,
+          `"${String(t.category || '').replace(/"/g, '""')}"`,
+          `"${String(t.mode || '').replace(/"/g, '""')}"`,
+          `"${String(t.ref || '').replace(/"/g, '""')}"`
+        ]);
+        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `upi_expenses_${TODAY_STR}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast('CSV Export Downloaded', 'Ready to open in Excel or Google Sheets.', 'credit');
+      });
+
+      // Copy Backup JSON to Clipboard
+      document.getElementById('btnCopyBackupClipboard').addEventListener('click', () => {
+        const jsonText = JSON.stringify(transactions, null, 2);
+        const tempArea = document.getElementById('textareaRestoreJson');
+        tempArea.value = jsonText;
+        tempArea.select();
+        try {
+          document.execCommand('copy');
+          showToast('Backup JSON Copied', 'Copied to clipboard and shown in the box below.', 'info');
+        } catch (err) {
+          showToast('Backup JSON Ready', 'Select and copy the JSON from the text box below.', 'info');
+        }
+      });
+
+      // Restore from File Upload
+      document.getElementById('inputRestoreFile').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            if (Array.isArray(imported)) {
+              transactions = imported;
+              saveTransactions();
+              syncSelectorsToState();
+              renderAll();
+              showToast('Backup Restored', `Loaded ${imported.length} transactions from file.`, 'credit');
+            } else {
+              showToast('Invalid Backup Format', 'JSON file must contain an array of transactions.', 'debit');
+            }
+          } catch (err) {
+            showToast('Restore Failed', 'Could not parse JSON file.', 'debit');
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // Restore from Pasted JSON
+      document.getElementById('btnRestoreFromTextarea').addEventListener('click', () => {
+        const raw = document.getElementById('textareaRestoreJson').value.trim();
+        if (!raw) {
+          showToast('Empty JSON', 'Paste a valid backup JSON array first.', 'info');
+          return;
+        }
+        try {
+          const imported = JSON.parse(raw);
+          if (Array.isArray(imported)) {
+            transactions = imported;
+            saveTransactions();
+            syncSelectorsToState();
+            renderAll();
+            showToast('Backup Restored', `Restored ${imported.length} records.`, 'credit');
+          } else {
+            showToast('Invalid JSON', 'Must be a JSON array of transaction objects.', 'debit');
+          }
+        } catch (err) {
+          showToast('Invalid JSON Syntax', 'Check that you pasted the full JSON array.', 'debit');
+        }
+      });
+
+      // Reset Demo Data & Clear All
+      document.getElementById('btnReloadDemoData').addEventListener('click', () => {
+        transactions = JSON.parse(JSON.stringify(DEFAULT_TRANSACTIONS));
+        saveTransactions();
+        syncSelectorsToState();
+        renderAll();
+        showToast('Demo Data Restored', 'Sample UPI & manual records reloaded.', 'info');
+      });
+
+      document.getElementById('btnClearAllData').addEventListener('click', () => {
+        transactions = [];
+        saveTransactions();
+        renderAll();
+        showToast('All Records Cleared', 'Your ledger is now empty and ready for fresh entries.', 'info');
+      });
+    });
+  </script>
+</body>
+</html>
