@@ -23,6 +23,54 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Organize Android Project Structure
+        run: |
+          mkdir -p app/src/main/java/com/upipulse/tracker
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/res/values
+
+          # Move Kotlin and Manifest files into app module if uploaded in root
+          cp -f MainActivity.kt Upi*.kt app/src/main/java/com/upipulse/tracker/ 2>/dev/null || true
+          cp -f AndroidManifest.xml app/src/main/ 2>/dev/null || true
+
+          # Create app build script if missing
+          if [ ! -f "app/build.gradle.kts" ]; then
+            cat << 'EOF' > app/build.gradle.kts
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+          android {
+              namespace = "com.upipulse.tracker"
+              compileSdk = 35
+              defaultConfig {
+                  applicationId = "com.upipulse.tracker"
+                  minSdk = 34
+                  targetSdk = 35
+                  versionCode = 2
+                  versionName = "2.0"
+              }
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions { jvmTarget = "17" }
+          }
+          dependencies {
+              implementation("androidx.core:core-ktx:1.13.1")
+              implementation("androidx.appcompat:appcompat:1.7.0")
+              implementation("androidx.webkit:webkit:1.11.0")
+          }
+          EOF
+          fi
+
+          # Ensure app strings exist
+          cat << 'EOF' > app/src/main/res/values/strings.xml
+          <resources>
+              <string name="app_name">UPI Pulse</string>
+          </resources>
+          EOF
+
       - name: Build Debug APK (Android 14 to Latest)
         run: gradle assembleDebug --no-daemon
 
